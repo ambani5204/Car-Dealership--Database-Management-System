@@ -1,0 +1,159 @@
+CREATE schema car_dealership;
+set search_path to car_dealership;
+
+CREATE TABLE model_details (
+	model_name varchar(20),
+	model_year numeric(4),
+	category varchar(20),
+	safety_ratings numeric(2,1),
+    
+	PRIMARY KEY(model_name)
+);
+
+CREATE TABLE variant_details (
+	model_id char(6),
+	model_name varchar(20),
+	engine_type char(6),
+	transmission_type varchar(6),
+	fuel_efficiency numeric(4,2),
+	wheel_drive char(3),
+	price numeric(8),
+
+	PRIMARY KEY(model_id),
+
+	FOREIGN KEY(model_name) references model_details(model_name)
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE customer (
+	cust_id numeric(4),
+	cust_name varchar(30),
+	contact_no numeric(10),
+	email varchar(20),
+	address varchar(60),
+
+	PRIMARY KEY(cust_id)
+);
+
+CREATE TABLE employee (
+	emp_id numeric(3),
+	emp_name varchar(30),
+	designation varchar(20),
+	contact_no numeric(10),
+	email varchar(20),
+
+	PRIMARY KEY(emp_id)
+);
+
+CREATE TABLE seller (
+	seller_id numeric(4),
+	seller_name varchar(20),
+	contact_no numeric(10),
+	email varchar(20),
+	address varchar(60),
+
+	PRIMARY KEY(seller_id)
+);
+
+CREATE TABLE cars (
+	car_id numeric(8),
+	model_id char(6),
+	colour varchar(25),
+
+	PRIMARY KEY(car_id),
+
+	FOREIGN KEY(model_id) references variant_details(model_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE
+)
+
+CREATE TABLE service (
+	service_id numeric(6),
+	car_id numeric(8),
+	receive_date date,
+	return_date date,
+	emp_id numeric(3),
+	com text,  
+
+	PRIMARY KEY(service_id),
+
+	FOREIGN KEY(car_id) references cars(car_id)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+
+	FOREIGN KEY(emp_id) references employee(emp_id)
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE used_cars (
+	car_id numeric(8),
+	km_driven int,
+	seller_id numeric(4),
+
+	PRIMARY KEY(car_id,km_driven),
+	
+	FOREIGN KEY(seller_id) references seller(seller_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	
+	FOREIGN KEY(car_id) references cars(car_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE stock_updates (
+
+	model_id char(6),
+	stock int,
+
+	PRIMARY KEY(model_id),
+		
+	FOREIGN KEY(model_id) references variant_details(model_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE pre_owned_car_invoice (
+	inv_id numeric(6),
+	inv_date date,
+	car_id numeric(8),
+	seller_id numeric(4),
+	sell_price numeric(8),
+	
+	PRIMARY KEY(inv_id),
+	
+	FOREIGN KEY(seller_id) references seller(seller_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	
+	FOREIGN KEY(car_id) references cars(car_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE sales_invoice (
+	inv_id numeric(6),
+	inv_date date,
+	car_id numeric(8),
+	cust_id numeric(4),
+	emp_id numeric(3),
+	amount numeric(8),
+
+	PRIMARY KEY(inv_id),
+
+	FOREIGN KEY(car_id) references cars(car_id)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+
+	FOREIGN KEY(emp_id) references employee(emp_id)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+
+	FOREIGN KEY(cust_id) references customer(cust_id)
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE review_system (
+
+	model_id char(6),
+	cust_id numeric(4),
+	rating numeric(1),
+	PRIMARY KEY(model_id,cust_id),
+		
+	FOREIGN KEY(model_id) references variant_details(model_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	
+	FOREIGN KEY(cust_id) references customer(cust_id) 
+	ON UPDATE CASCADE ON DELETE CASCADE
+);

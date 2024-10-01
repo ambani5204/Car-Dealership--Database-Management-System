@@ -1,0 +1,120 @@
+1) Give top 3 selling cars of all time
+
+SELECT model_name,count(model_name) FROM (sales_invoice NATURAL JOIN cars NATURAL JOIN variant_details)
+GROUP BY model_name 
+ORDER BY count(model_name) DESC LIMIT 3;
+
+
+2) How many category wise new cars are currently available in stock
+
+SELECT category,count(stock) FROM variant_details NATURAL JOIN model_details NATURAL JOIN stock_updates 
+GROUP BY category;
+
+
+3) List of customers who bought more than 1 cars
+
+SELECT * FROM customer NATURAL JOIN
+(SELECT cust_id,count(cust_id) AS no_of_cars FROM sales_invoice
+GROUP BY cust_id
+HAVING count(cust_id)>=2) AS r;
+
+
+4) List of cars that are sold by dealership and came for resell
+
+SELECT car_id,model_id,model_name FROM variant_details NATURAL JOIN cars NATURAL JOIN 
+(SELECT si.car_id FROM sales_invoice AS si JOIN pre_owned_car_invoice AS pi ON si.car_id=pi.car_id
+WHERE si.inv_date<pi.inv_date) AS r;
+
+
+5) Customers who sold their car and bought new car.
+
+(SELECT distinct cust_id,si.name FROM 
+(sales_invoice NATURAL JOIN customer) AS si 
+JOIN 
+(pre_owned_car_invoice NATURAL JOIN seller) AS pi 
+ON si.name=pi.name
+WHERE si.inv_date>pi.inv_date);
+
+
+6) Details of car models that not sold at all
+
+SELECT model_id,model_name,transmissiON_type,engine_type,fuel_efficiency FROM variant_details NATURAL JOIN
+(SELECT model_id FROM variant_details
+EXCEPT
+SELECT model_id FROM cars NATURAL JOIN variant_details) AS r;
+
+
+7) Profit per car on owned cars
+
+SELECT si.car_id,(amount-sell_price) AS profit 
+FROM sales_invoice AS si JOIN pre_owned_car_invoice AS pi ON si.car_id=pi.car_id
+WHERE si.inv_date>pi.inv_date
+
+
+8) List of cars that got their all three free service
+
+SELECT car_id,count(car_id) AS no_of_service FROM service
+GROUP BY car_id
+HAVING count(car_id)=3;
+
+
+9) List of cars whose price is less than 1 crores and comes with diesel engine and automatic.
+
+SELECT model_id,model_name,category,price 
+FROM variant_details NATURAL JOIN model_details 
+WHERE price<10000000 AND engine_type='diesel' AND transmission_type='auto'
+
+
+10) List of used cars that are driven less than 25000 KMs and comes with petrol engine and All wheel Drive
+
+SELECT car_id,model_id FROM used_cars NATURAL JOIN cars NATURAL JOIN variant_details
+WHERE km_driven<25000 and engine_type='petrol' and wheel_drive='AWD'
+
+
+11) List of used SUVs that has milage greater than 10 kmpl and safety ratings greater than 4
+
+SELECT car_id,model_id FROM used_cars NATURAL JOIN cars NATURAL JOIN variant_details NATURAL JOIN model_details
+WHERE safety_ratings >4 AND fuel_efficiency>=10 AND category='suv'
+
+
+12) List of models that have ratings given by customer greater than 3.5
+
+SELECT model_id,avg(rating) FROM review_system
+GROUP BY model_id
+HAVING avg(rating)>3.5
+
+
+13) Top 3 best sales executive in year 2021
+
+SELECT emp_id,emp_name, count(emp_id) AS no_of_cars FROM sales_invoice NATURAL JOIN employee WHERE extract(year FROM inv_date)=2021
+GROUP BY emp_id,emp_name
+ORDER BY count(emp_id) DESC LIMIT 3
+
+
+14) Most Experienced mechanic
+
+SELECT emp_id,emp_name, count(emp_id) AS no_of_cars FROM service NATURAL JOIN employee
+WHERE designation='Mechanic'
+GROUP BY emp_id,emp_name 
+ORDER BY count(emp_id) DESC LIMIT 1
+
+
+15) List of available colours in particular model ‘C220d’
+
+SELECT distinct colour FROM cars NATURAL JOIN variant_details
+WHERE model_name='C220d'
+
+
+16) List of pre owned cars that are not sold
+
+SELECT car_id,model_id,model_name,km_driven,fuel_efficiency FROM cars 
+NATURAL JOIN used_cars NATURAL JOIN variant_details NATURAL JOIN 
+(SELECT car_id FROM used_cars
+EXCEPT
+SELECT car_id FROM sales_invoice) AS r;
+
+
+17) Sales revenue of past year
+
+SELECT sum(amount) FROM sales_invoice
+WHERE EXTRACT(YEAR FROM inv_date)=2022
